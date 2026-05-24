@@ -1,0 +1,67 @@
+;
+; spi_pio.pio — SPI Mode 0, MSB first, byte-oriented
+; For CryptoLite-ICE: RP2040 → W25Q32 SPI flash (iCE40 bitstream)
+; controlpaths.com | lut7.dev
+;
+; Pins (configured at runtime via spi_pio_init):
+;   OUT pin 0  = MOSI (PIN_ICE_SI,  GPIO8)
+;   IN  pin 0  = MISO (PIN_ICE_SO,  GPIO11)
+;   sideset    = SCK  (PIN_ICE_SCK, GPIO13)
+
+.program spi_pio
+.side_set 1          ; SCK uses sideset
+
+.wrap_target
+    out pins, 1       side 0   ; output 1 bit on MOSI, SCK low
+    in  pins, 1       side 1   ; sample MISO on SCK rising edge
+.wrap
+
+% c-sdk {
+
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
+
+static inline void spi_pio_program_init(
+    PIO pio, uint sm,
+    uint offset,
+    uint pin_mosi, uint pin_miso, uint pin_sck,
+    uint32_t freq_hz)
+{
+    pio_sm_config c = spi_pio_program_get_default_config(offset);
+
+    sm_config_set_out_pins(&c, pin_mosi, 1);
+    sm_config_set_in_pins(&c, pin_miso);
+    sm_config_set_sideset_pins(&c, pin_sck);
+
+    // Shift out MSB first, autopull at 8 bits
+    sm_config_set_out_shift(&c, false, true, 8);
+
+    // Shift in MSB first, autopush at 8 bits
+    sm_config_set_in_shift(&c, false, true, 8);
+
+    // Clock divider: each PIO cycle = 2 SCK transitions → freq = sys_clk / (2 * div)
+    float div = (float)clock_get_hz(clk_sys) / (2.0f * (float)freq_hz);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_gpio_init(pio, pin_mosi);
+    pio_gpio_init(pio, pin_miso);
+    pio_gpio_init(pio, pin_sck);
+
+    // Pull-down on MISO to fight the iCE40 internal weak pull-up on SPI_SI
+    gpio_pull_down(pin_miso);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, pin_mosi, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, pin_miso, 1, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, pin_sck,  1, true);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+    // Force SCK and MOSI LOW before enabling
+    pio_sm_set_pins_with_mask(pio, sm,
+        0u,
+        (1u << pin_sck) | (1u << pin_mosi));
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+%}

@@ -1,0 +1,29 @@
+# cryptolite_trng_spi.pcf — physical constraints for the TRNG SPI top
+# controlpaths.com | lut7.dev
+
+# 48 MHz clock from RP2040 GPIO25 → iCE40 pin 44 (GBIN5)
+set_io clk    44
+
+# SPI slave bus to RP2040 (shared physical net with external flash U6).
+# Physical wiring (verified against the working flash programmer firmware):
+#   net "ICE_SI" = iCE40 pin 17 = RP2040 GPIO8  = flash DO  (MISO to RP2040)
+#   net "ICE_SO" = iCE40 pin 14 = RP2040 GPIO11 = flash DI  (MOSI from RP2040)
+# The FPGA slave therefore drives `so` on iCE40 pin 17 (the MISO line)
+# while the flash stays de-selected (its DO is in HiZ).
+set_io sck    15
+set_io so     17
+
+# Pin 14 (MOSI from the RP2040) and pin 16 (SS_B) are not used by this
+# slave and are left unassigned. The RP2040 keeps SS_B HIGH while talking
+# to the FPGA so the external flash stays de-selected.
+
+# APP0 (pin 10) and APP1 (pin 11) are intentionally unassigned in this
+# variant — they are reserved for future use.
+
+# APP0 (pin 10) and APP1 (pin 11) are intentionally unassigned in this
+# variant — they are reserved for future use.
+
+# RGB LED D3 — dedicated SB_RGBA_DRV outputs, placed automatically
+set_io --warn-no-port led_r  39
+set_io --warn-no-port led_g  40
+set_io --warn-no-port led_b  41

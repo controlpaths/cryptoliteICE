@@ -1,0 +1,5 @@
+# Host-side Python dependencies for criptolite-ice.py
+#   pip install -r requirements.txt
+# A working libusb-1.0 backend must also be available on the system
+# (Linux: usually preinstalled; Debian/Ubuntu: apt install libusb-1.0-0).
+pyusb>=1.2.1

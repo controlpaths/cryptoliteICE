@@ -41,3 +41,32 @@ fp-info-cache
 
 # Local project settings
 *.kicad_prl
+
+# ── Firmware / FPGA / host build artifacts ──────────────────────────────
+# Build output trees (created by the build_*.sh scripts)
+build/
+
+# Pico SDK — provide your own checkout (submodule or PICO_SDK_PATH)
+pico-sdk/
+
+# FPGA toolchain intermediates and bitstreams
+*.json
+*.asc
+*.bin
+
+# RP2040 firmware images
+*.uf2
+*.elf
+*.hex
+*.dis
+*.map
+
+# Simulation output (iverilog / vvp)
+*.vcd
+*.out
+a.out
+
+# Python
+.venv/
+__pycache__/
+*.pyc

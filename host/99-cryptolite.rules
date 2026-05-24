@@ -1,0 +1,16 @@
+# udev rules for CryptoLite-ICE / CryptoLite-RP
+# Allow non-root access to the USB Vendor device used by criptolite-ice.py
+# and to the RP2040 BOOTSEL mass-storage device.
+#
+# Install with:
+#     sudo cp scripts/99-cryptolite.rules /etc/udev/rules.d/
+#     sudo udevadm control --reload-rules
+#     sudo udevadm trigger
+#
+# controlpaths.com | lut7.dev
+
+# CryptoLite-RP firmware (Vendor class)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000f", MODE="0666", TAG+="uaccess"
+
+# RP2040 BOOTSEL bootloader
+SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0003", MODE="0666", TAG+="uaccess"
